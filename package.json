@@ -1,0 +1,14 @@
+{
+  "name": "dnd-dice-server",
+  "version": "1.0.0",
+  "description": "D&D 3D Dice Local Server for Termux",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "@3d-dice/dice-box": "^1.1.4",
+    "express": "^4.19.2",
+    "socket.io": "^4.7.5"
+  }
+}

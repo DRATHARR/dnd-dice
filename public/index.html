@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>D&D Dice Roller</title>
+    <style>
+        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { margin: 0; padding: 0; background-color: #121212; color: #e0e0e0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        
+        .modal { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.85); display: flex; justify-content: center; align-items: center; z-index: 200; }
+        .modal-content { background: #1e1e1e; padding: 25px; border-radius: 12px; text-align: center; border: 1px solid #b71c1c; width: 90%; max-width: 350px; }
+        .modal-content h2 { margin-top: 0; color: #ff5252; }
+        .modal input { width: 100%; padding: 12px; margin: 15px 0; background: #2c2c2c; border: 1px solid #444; color: white; border-radius: 6px; font-size: 1rem; }
+        .modal button { width: 100%; background: #b71c1c; color: white; border: none; padding: 12px; font-size: 1.1rem; cursor: pointer; border-radius: 6px; font-weight: bold; }
+        
+        header { background-color: #1a1a1a; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #b71c1c; z-index: 10;}
+        header h1 { margin: 0; font-size: 1.2rem; color: #ff5252; }
+        #player-count { font-size: 0.9rem; color: #aaa; }
+        
+        main { flex: 1; display: flex; flex-direction: column; padding: 10px; gap: 10px; overflow: hidden; position: relative; z-index: 10;}
+        
+        .controls { background: #1a1a1a; padding: 12px; border-radius: 10px; border: 1px solid #333; flex-shrink: 0; }
+        #loading-text { text-align: center; color: #ff5252; font-size: 0.9rem; margin-bottom: 10px; font-weight: bold; display: none; }
+        
+        .modifier-group { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; background: #222; padding: 6px 12px; border-radius: 8px; }
+        .modifier-controls { display: flex; align-items: center; gap: 5px; }
+        .modifier-controls button { background: #333; color: white; border: none; width: 30px; height: 30px; border-radius: 4px; font-size: 1.2rem; cursor: pointer; }
+        .modifier-controls button:active { background: #ff5252; }
+        .modifier-controls input { width: 50px; padding: 5px; background: #111; border: 1px solid #444; color: white; border-radius: 4px; text-align: center; font-size: 1.1rem; }
+        
+        .pool-builder { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 10px; }
+        .dice-row { display: flex; align-items: center; justify-content: space-between; background: #222; padding: 4px 8px; border-radius: 6px; border: 1px solid #333; }
+        .dice-row .lbl { font-weight: bold; color: #ff5252; width: 35px; font-size: 1.1rem; }
+        .dice-row button { background: #333; color: white; border: none; width: 30px; height: 30px; border-radius: 4px; font-size: 1.2rem; cursor: pointer; }
+        .dice-row button:active { background: #ff5252; }
+        .dice-row .cnt { font-size: 1.2rem; font-weight: bold; width: 25px; text-align: center; }
+        
+        .action-bar { display: flex; gap: 8px; }
+        #btn-reset { background: #555; color: white; border: none; padding: 12px 10px; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        .btn-adv-dis { background: #2a2a2a; color: #bbb; border: 1px solid #444; padding: 8px 10px; border-radius: 8px; font-size: 0.85rem; font-weight: bold; cursor: pointer; flex: 0.8; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .btn-adv-dis:active { background: #444; color: white; }
+        #btn-adv { border-color: #2e7d32; color: #81c784; }
+        #btn-dis { border-color: #c62828; color: #e57373; }
+
+        #btn-roll { flex: 1.5; background: #4caf50; color: white; border: none; padding: 12px; border-radius: 8px; font-size: 1.1rem; font-weight: bold; cursor: pointer; }
+        #btn-roll:disabled { opacity: 0.5; cursor: not-allowed; background: #333; }
+        #btn-roll:active:not(:disabled) { transform: scale(0.98); }
+
+        .history { flex: 1; background: #1a1a1a; border-radius: 10px; padding: 12px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; border: 1px solid #333; }
+        .log-entry { background: #222; padding: 10px; border-radius: 6px; font-size: 0.95rem; border-left: 4px solid #555; animation: fadeIn 0.3s ease; }
+        .log-entry.crit-succ-border { border-left-color: #4caf50; }
+        .log-entry.crit-fail-border { border-left-color: #f44336; }
+        .time { color: #777; font-size: 0.8rem; margin-right: 5px; }
+        .crit-success { color: #4caf50; font-weight: bold; text-shadow: 0 0 5px rgba(76,175,80,0.5); }
+        .crit-fail { color: #f44336; font-weight: bold; text-shadow: 0 0 5px rgba(244,67,54,0.5); }
+        .total-value { font-size: 1.2rem; font-weight: bold; color: #fff; background: #111; padding: 2px 8px; border-radius: 4px; border: 1px solid #444; }
+        .roll-details { margin: 5px 0; color: #aaa; font-size: 0.9rem; word-wrap: break-word; }
+        
+        #dice-box { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 100; overflow: hidden; }
+        #dice-box canvas { width: 100% !important; height: 100% !important; }
+        
+        #dice-popup-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 300; pointer-events: none; opacity: 0; transition: opacity 0.3s ease; }
+        .popup-dice-card { background: #1e1e1e; border: 2px solid #b71c1c; padding: 20px 30px; border-radius: 16px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.8); transform: scale(0.5); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .popup-dice-card h3 { margin: 0 0 10px 0; color: #ff5252; font-size: 1.1rem; }
+        .popup-dice-values { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin: 10px 0; }
+        .popup-dice-item { background: #111; border: 1px solid #444; border-radius: 8px; padding: 10px 15px; font-size: 1.5rem; font-weight: bold; color: #fff; min-width: 60px; }
+        .popup-dice-total { margin-top: 10px; font-size: 1rem; color: #aaa; }
+        .popup-dice-total span { color: #4caf50; font-size: 1.3rem; font-weight: bold; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+    <div id="dice-box"></div>
+
+    <div id="dice-popup-overlay">
+        <div class="popup-dice-card" id="popup-card">
+            <h3 id="popup-title">Гість кидає кубики</h3>
+            <div class="popup-dice-values" id="popup-values"></div>
+            <div class="popup-dice-total" id="popup-total-container">Всього: <span id="popup-total">0</span></div>
+        </div>
+    </div>
+
+    <div id="login-modal" class="modal">
+        <div class="modal-content">
+            <h2>Введіть ім'я персонажа</h2>
+            <input type="text" id="username-input" placeholder="Наприклад: Ґеральт..." autocomplete="off" />
+            <button id="join-btn">Приєднатися до гри</button>
+        </div>
+    </div>
+
+    <header>
+        <h1>🎲 D&D Dice Roller</h1>
+        <div id="player-count">Гравців: 0</div>
+    </header>
+
+    <main>
+        <div class="controls">
+            <div id="loading-text">Завантаження 3D рушія...</div>
+            
+            <div class="modifier-group">
+                <label for="modifier">Модифікатор:</label>
+                <div class="modifier-controls">
+                    <button id="mod-min">-</button>
+                    <input type="number" id="modifier" value="0" />
+                    <button id="mod-add">+</button>
+                </div>
+            </div>
+            
+            <div class="pool-builder">
+                <div class="dice-row" data-sides="4"><span class="lbl">d4</span><button class="btn-min">-</button><span class="cnt">0</span><button class="btn-add">+</button></div>
+                <div class="dice-row" data-sides="6"><span class="lbl">d6</span><button class="btn-min">-</button><span class="cnt">0</span><button class="btn-add">+</button></div>
+                <div class="dice-row" data-sides="8"><span class="lbl">d8</span><button class="btn-min">-</button><span class="cnt">0</span><button class="btn-add">+</button></div>
+                <div class="dice-row" data-sides="10"><span class="lbl">d10</span><button class="btn-min">-</button><span class="cnt">0</span><button class="btn-add">+</button></div>
+                <div class="dice-row" data-sides="12"><span class="lbl">d12</span><button class="btn-min">-</button><span class="cnt">0</span><button class="btn-add">+</button></div>
+                <div class="dice-row" data-sides="20"><span class="lbl">d20</span><button class="btn-min">-</button><span class="cnt">0</span><button class="btn-add">+</button></div>
+                <div class="dice-row" data-sides="100" style="grid-column: span 2; justify-content: center; gap: 15px;">
+                    <span class="lbl">d100</span><button class="btn-min">-</button><span class="cnt">0</span><button class="btn-add">+</button>
+                </div>
+            </div>
+
+            <div class="action-bar">
+                <button id="btn-reset">Скинути</button>
+                <button id="btn-adv" class="btn-adv-dis"><span>📈 Перевага</span></button>
+                <button id="btn-roll" disabled>Кинути!</button>
+                <button id="btn-dis" class="btn-adv-dis"><span>📉 Перешкода</span></button>
+            </div>
+        </div>
+
+        <div class="history" id="history"></div>
+    </main>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script type="module">
+        import DiceBox from "/dice-box/dice-box.es.min.js";
+
+        const socket = io();
+        let playerName = localStorage.getItem('dnd_player_name');
+        let isDiceReady = false;
+
+        const loginModal = document.getElementById('login-modal');
+        const usernameInput = document.getElementById('username-input');
+        const joinBtn = document.getElementById('join-btn');
+        const historyDiv = document.getElementById('history');
+        const playerCountDiv = document.getElementById('player-count');
+        const modifierInput = document.getElementById('modifier');
+        const modMinBtn = document.getElementById('mod-min');
+        const modAddBtn = document.getElementById('mod-add');
+        const loadingText = document.getElementById('loading-text');
+        const btnRoll = document.getElementById('btn-roll');
+        const btnReset = document.getElementById('btn-reset');
+        const btnAdv = document.getElementById('btn-adv');
+        const btnDis = document.getElementById('btn-dis');
+        
+        const popupOverlay = document.getElementById('dice-popup-overlay');
+        const popupCard = document.getElementById('popup-card');
+        const popupTitle = document.getElementById('popup-title');
+        const popupValues = document.getElementById('popup-values');
+        const popupTotal = document.getElementById('popup-total');
+
+        if (!playerName) loginModal.style.display = 'flex';
+        else { loginModal.style.display = 'none'; socket.emit('join', playerName); }
+
+        joinBtn.addEventListener('click', () => {
+            const name = usernameInput.value.trim();
+            if (name) {
+                playerName = name;
+                localStorage.setItem('dnd_player_name', name);
+                loginModal.style.display = 'none';
+                socket.emit('join', name);
+            }
+        });
+
+        loadingText.style.display = 'block';
+
+        const diceBox = new DiceBox("#dice-box", {
+            assetPath: "/dice-box/assets/", 
+            theme: "default",
+            themeColor: "#b71c1c",
+            scale: 5,
+            gravity: 2
+        });
+
+        diceBox.init().then(() => {
+            isDiceReady = true;
+            loadingText.style.display = 'none';
+            updateRollBtn();
+        });
+
+        const pool = { 4:0, 6:0, 8:0, 10:0, 12:0, 20:0, 100:0 };
+
+        document.querySelectorAll('.dice-row').forEach(row => {
+            const sides = row.dataset.sides;
+            const btnMin = row.querySelector('.btn-min');
+            const btnAdd = row.querySelector('.btn-add');
+            const spanCnt = row.querySelector('.cnt');
+
+            btnMin.addEventListener('click', () => {
+                if (pool[sides] > 0) { pool[sides]--; spanCnt.innerText = pool[sides]; updateRollBtn(); }
+            });
+            btnAdd.addEventListener('click', () => {
+                if (pool[sides] < 15) { pool[sides]++; spanCnt.innerText = pool[sides]; updateRollBtn(); }
+            });
+        });
+
+        modMinBtn.addEventListener('click', () => {
+            let val = parseInt(modifierInput.value) || 0;
+            modifierInput.value = val - 1;
+        });
+        modAddBtn.addEventListener('click', () => {
+            let val = parseInt(modifierInput.value) || 0;
+            modifierInput.value = val + 1;
+        });
+
+        function updateRollBtn() {
+            const totalDice = Object.values(pool).reduce((a, b) => a + b, 0);
+            btnRoll.disabled = !isDiceReady || totalDice === 0;
+            btnAdv.disabled = !isDiceReady;
+            btnDis.disabled = !isDiceReady;
+        }
+
+        btnReset.addEventListener('click', () => {
+            for (let k in pool) pool[k] = 0;
+            document.querySelectorAll('.cnt').forEach(el => el.innerText = '0');
+            modifierInput.value = 0;
+            diceBox.clear();
+            updateRollBtn();
+        });
+
+        function extractVal(r) {
+            if (typeof r === 'number') return r;
+            if (!r) return 0;
+            return r.value !== undefined ? r.value : (r.result !== undefined ? r.result : (r.val !== undefined ? r.val : 0));
+        }
+
+        function flattenRolls(results) {
+            let allRolls = [];
+            if (Array.isArray(results)) {
+                results.forEach(group => {
+                    const sides = group.sides || 20;
+                    const rolls = group.rolls && group.rolls.length > 0 ? group.rolls : [group];
+                    rolls.forEach(r => {
+                        allRolls.push({ sides, val: extractVal(r) });
+                    });
+                });
+            }
+            return allRolls;
+        }
+
+        function showPopupDice(name, results, modifier, rollType) {
+            popupTitle.innerText = `${name} кинув(ла) кубики:`;
+            popupValues.innerHTML = '';
+            
+            let allRolls = flattenRolls(results);
+            let targetIdx = 0;
+
+            if ((rollType === 'adv' || rollType === 'dis') && allRolls.length >= 2) {
+                let extremeVal = allRolls[0].val;
+                allRolls.forEach((item, idx) => {
+                    if (rollType === 'adv' && item.val > extremeVal) { extremeVal = item.val; targetIdx = idx; }
+                    if (rollType === 'dis' && item.val < extremeVal) { extremeVal = item.val; targetIdx = idx; }
+                });
+            }
+
+            let totalSum = 0;
+            allRolls.forEach((item, idx) => {
+                const isIgnored = (rollType === 'adv' || rollType === 'dis') && allRolls.length >= 2 && idx !== targetIdx;
+                
+                const elem = document.createElement('div');
+                elem.className = 'popup-dice-item';
+                elem.innerText = `d${item.sides}: ${item.val}`;
+                if (item.sides === 20 && item.val === 20) elem.style.color = '#4caf50';
+                if (item.sides === 20 && item.val === 1) elem.style.color = '#f44336';
+                
+                if (isIgnored) {
+                    elem.style.opacity = '0.3';
+                    elem.style.textDecoration = 'line-through';
+                } else {
+                    totalSum += item.val;
+                }
+                popupValues.appendChild(elem);
+            });
+            
+            const finalTotal = totalSum + modifier;
+            let modText = modifier !== 0 ? ` (${modifier > 0 ? '+' + modifier : modifier})` : '';
+            popupTotal.innerText = `${finalTotal}${modText}`;
+
+            popupOverlay.style.display = 'flex';
+            setTimeout(() => {
+                popupOverlay.style.opacity = '1';
+                popupCard.style.transform = 'scale(1)';
+            }, 10);
+
+            setTimeout(() => {
+                popupOverlay.style.opacity = '0';
+                popupCard.style.transform = 'scale(0.5)';
+                setTimeout(() => {
+                    popupOverlay.style.display = 'none';
+                }, 300);
+            }, 3500);
+        }
+
+        function executeRoll(notationArr, modifier, rollType = 'normal') {
+            diceBox.roll(notationArr).then(results => {
+                socket.emit('commit_roll', {
+                    name: playerName,
+                    results: results,
+                    modifier: modifier,
+                    rollType: rollType
+                });
+            });
+        }
+
+        btnRoll.addEventListener('click', () => {
+            const notationArr = [];
+            for (let k in pool) { if (pool[k] > 0) notationArr.push(`${pool[k]}d${k}`); }
+            if (notationArr.length === 0) return;
+
+            const modifier = parseInt(modifierInput.value) || 0;
+            executeRoll(notationArr, modifier, 'normal');
+        });
+
+        btnAdv.addEventListener('click', () => {
+            const modifier = parseInt(modifierInput.value) || 0;
+            executeRoll(['2d20'], modifier, 'adv');
+        });
+
+        btnDis.addEventListener('click', () => {
+            const modifier = parseInt(modifierInput.value) || 0;
+            executeRoll(['2d20'], modifier, 'dis');
+        });
+
+        socket.on('init_state', (data) => {
+            playerCountDiv.innerText = `Гравців: ${data.players.length}`;
+            historyDiv.innerHTML = '';
+            data.history.forEach(addLog);
+        });
+
+        socket.on('update_players', (players) => {
+            playerCountDiv.innerText = `Гравців: ${players.length}`;
+        });
+
+        socket.on('new_roll_log', (data) => {
+            if (data.name !== playerName) {
+                showPopupDice(data.name, data.results, data.modifier, data.rollType);
+            }
+            addLog(data);
+        });
+
+        function addLog(data) {
+            const div = document.createElement('div');
+            div.className = 'log-entry';
+
+            let totalSum = 0;
+            let rollValuesStr = [];
+            let hasCritSucc = false;
+            let hasCritFail = false;
+            const rollType = data.rollType || 'normal';
+
+            let allRolls = flattenRolls(data.results);
+            let targetIdx = 0;
+
+            if ((rollType === 'adv' || rollType === 'dis') && allRolls.length >= 2) {
+                let extremeVal = allRolls[0].val;
+                allRolls.forEach((item, idx) => {
+                    if (rollType === 'adv' && item.val > extremeVal) { extremeVal = item.val; targetIdx = idx; }
+                    if (rollType === 'dis' && item.val < extremeVal) { extremeVal = item.val; targetIdx = idx; }
+                });
+            }
+
+            allRolls.forEach((item, idx) => {
+                const val = item.val;
+                let valStr = val.toString();
+                const isIgnored = (rollType === 'adv' || rollType === 'dis') && allRolls.length >= 2 && idx !== targetIdx;
+
+                if (isIgnored) {
+                    valStr = `<span style="text-decoration: line-through; opacity: 0.4;">${val}</span>`;
+                } else {
+                    totalSum += val;
+                    if (item.sides === 20 && rollType === 'normal') {
+                        if (val === 20) { valStr = `<span class="crit-success">20</span>`; hasCritSucc = true; }
+                        if (val === 1) { valStr = `<span class="crit-fail">1</span>`; hasCritFail = true; }
+                    }
+                }
+                rollValuesStr.push(valStr);
+            });
+
+            if (hasCritSucc) div.classList.add('crit-succ-border');
+            if (hasCritFail) div.classList.add('crit-fail-border');
+
+            let label = `Кубики`;
+            if (rollType === 'adv') label = 'Перевага (2d20)';
+            else if (rollType === 'dis') label = 'Перешкода (2d20)';
+            else if (allRolls.length > 0) label = `${allRolls.length}d${allRolls[0].sides}`;
+
+            const finalTotal = totalSum + data.modifier;
+            let modStr = '';
+            if (data.modifier > 0) modStr = ` + ${data.modifier}`;
+            if (data.modifier < 0) modStr = ` - ${Math.abs(data.modifier)}`;
+
+            div.innerHTML = `
+                <span class="time">[${data.time}]</span> <strong>${data.name}</strong> кинув(ла):
+                <div class="roll-details"><strong>${label}</strong> [${rollValuesStr.join(', ')}]${modStr}</div>
+                Всього: <span class="total-value">${finalTotal}</span>
+            `;
+
+            historyDiv.prepend(div);
+        }
+    </script>
+</body>
+</html>
