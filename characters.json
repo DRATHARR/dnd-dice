@@ -1,0 +1,120 @@
+{
+    "Гендальф": {
+        "name": "Гендальф",
+        "charData": {
+            "level": 4,
+            "hp": 60,
+            "maxHp": 60,
+            "ac": 18,
+            "conditions": [],
+            "spellAbility": "int",
+            "hd": "8",
+            "stats": {
+                "str": {
+                    "score": 13,
+                    "skills": {
+                        "save": 0,
+                        "athletics": 0
+                    }
+                },
+                "dex": {
+                    "score": 14,
+                    "skills": {
+                        "save": 0,
+                        "acrobatics": 2,
+                        "sleight": 0,
+                        "stealth": 0
+                    }
+                },
+                "con": {
+                    "score": 15,
+                    "skills": {
+                        "save": 0
+                    }
+                },
+                "int": {
+                    "score": 18,
+                    "skills": {
+                        "save": 0,
+                        "arcana": 0,
+                        "history": 0,
+                        "investigation": 0,
+                        "nature": 0,
+                        "religion": 0
+                    }
+                },
+                "wis": {
+                    "score": 14,
+                    "skills": {
+                        "save": 0,
+                        "animal": 0,
+                        "insight": 0,
+                        "medicine": 0,
+                        "perception": 0,
+                        "survival": 0
+                    }
+                },
+                "cha": {
+                    "score": 7,
+                    "skills": {
+                        "save": 0,
+                        "deception": 0,
+                        "intimidation": 0,
+                        "performance": 0,
+                        "persuasion": 0
+                    }
+                }
+            },
+            "profBonus": 2
+        },
+        "macros": [
+            {
+                "name": "Фаєрбол",
+                "notation": "2d8 + 6"
+            }
+        ],
+        "spellSlots": [
+            [
+                true,
+                true,
+                false,
+                false
+            ],
+            [
+                true,
+                true,
+                true
+            ],
+            [
+                true,
+                true,
+                true
+            ],
+            [
+                true,
+                true,
+                false
+            ],
+            [
+                true,
+                true,
+                true
+            ],
+            [
+                true,
+                true
+            ],
+            [
+                false,
+                false
+            ],
+            [
+                true
+            ],
+            [
+                false
+            ]
+        ],
+        "privateNotepad": ""
+    }
+}
