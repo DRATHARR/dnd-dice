@@ -74,9 +74,8 @@ A real-time multiplayer companion app for tabletop RPGs (D&D 5e/5.5e), optimized
 3. Done!
 
 For future server startups:
-1. cd dnd-dice
-2. node server.js
-3. Done!
+1. cd dnd-dice && node server.js
+2. Done!
 
 # Open http://localhost:3000 in your browser. For multiplayer, open the page on multiple devices on the same network or host the server on a VPS/Render/Railway and share your device's IP with port 3000 (Example: 192.168.1.120:3000).
 
@@ -145,9 +144,8 @@ For future server startups:
 3. Готово!
 
 Для майбутніх запусків сервера:
-1. cd dnd-dice
-2. node server.js
-3. Готово!
+1. cd dnd-dice && node server.js
+2. Готово!
 
 # Відкрийте http://localhost:3000 у браузері. Для мультиплеєру відкрийте сторінку на кількох пристроях в одній мережі або підніміть сервер на VPS/Render/Railway і дайте IP вашого девайса з портом 3000 (Приклад: 192.168.1.120:3000).
 ```
