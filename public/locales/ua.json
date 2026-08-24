@@ -22,7 +22,7 @@
     "hit_dice": "Кістка ХП:",
     "btn_short_rest": "Відновити",
     "btn_long_rest": "Довгий Відпочинок (Full)",
-    "conditions_title": "Стан (Утримайте Ctrl/Cmd для кількох)",
+    "conditions_title": "Стан",
     
     "death_saves_title": "Рятівні кидки від смерті",
     "ds_successes": "Успіхи",
@@ -124,5 +124,10 @@
     "short_rest_log": "Короткий відпочинок",
 	"text_size_label": "Розмір тексту",
     "ui_scale_label": "Масштаб інтерфейсу",
-    "msg_confirm_delete": "Ви впевнені, що хочете видалити персонажа"
+    "msg_confirm_delete": "Ви впевнені, що хочете видалити персонажа",
+	"set_show_typing": "Показувати, хто друкує нотатки",
+    "set_show_popups": "Спливаючі вікна чужих кидків",
+    "typing_one": "пише...",
+    "typing_many": "пишуть...",
+    "typing_and": "і"
 }

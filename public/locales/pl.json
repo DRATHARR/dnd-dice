@@ -22,7 +22,7 @@
     "hit_dice": "Kości Wytrzymałości:",
     "btn_short_rest": "Odzyskaj",
     "btn_long_rest": "Długi Odpoczynek (Pełny)",
-    "conditions_title": "Stany (Przytrzymaj Ctrl/Cmd dla wielu)",
+    "conditions_title": "Stany",
     
     "death_saves_title": "Rzuty obronne przed śmiercią",
     "ds_successes": "Sukcesy",
@@ -124,5 +124,10 @@
     "short_rest_log": "Krótki Odpoczynek",
     "text_size_label": "Rozmiar tekstu",
     "ui_scale_label": "Skala interfejsu",
-    "msg_confirm_delete": "Czy na pewno chcesz usunąć postać?"
+    "msg_confirm_delete": "Czy na pewno chcesz usunąć postać?",
+    "set_show_typing": "Pokazuj, kto pisze notatki",
+    "set_show_popups": "Wyskakujące okienka rzutów innych graczy",
+    "typing_one": "pisze...",
+    "typing_many": "piszą...",
+    "typing_and": "i"
 }

@@ -108,6 +108,16 @@ io.on('connection', (socket) => {
     socket.on('update_notepad', (text) => {
         sharedNotepad = text;
         socket.broadcast.emit('notepad_updated', sharedNotepad);
+		
+    });
+
+	socket.on('typing_notepad', (isTyping) => {
+        if (connectedPlayers[socket.id]) {
+            socket.broadcast.emit('user_typing', { 
+                name: connectedPlayers[socket.id].name, 
+                isTyping: isTyping 
+            });
+        }
     });
 
     socket.on('clear_initiative', () => {

@@ -6,9 +6,8 @@
     <title>D&D Dice Roller</title>
     <style>
         * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        /* html font-size will be controlled via JS for text scaling */
         html { font-size: 100%; transition: font-size 0.2s; }
-        body { margin: 0; padding: 0; background-color: #121212; color: #e0e0e0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; transition: zoom 0.2s; }
+        body { margin: 0; padding: 0; background-color: #121212; color: #e0e0e0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
         
         /* Modals */
         .modal { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.85); display: none; justify-content: center; align-items: center; z-index: 200; }
@@ -22,11 +21,13 @@
         .settings-label input[type="checkbox"] { transform: scale(1.3); margin-left: 10px; }
         .settings-label input[type="range"] { margin-top: 5px; accent-color: #ff5252; }
         
-        /* Toast Notification */
+        /* Toasts & Typing Indicator */
         #roll-toast { position: fixed; bottom: -100px; left: 50%; transform: translateX(-50%); background: rgba(30,30,30,0.95); border: 2px solid #4caf50; border-radius: 8px; padding: 12px 20px; color: white; z-index: 400; transition: bottom 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); box-shadow: 0 4px 15px rgba(0,0,0,0.8); text-align: center; width: 90%; max-width: 400px; pointer-events: none; }
         #roll-toast.show { bottom: 20px; }
         .toast-title { font-size: 0.85rem; color: #aaa; margin-bottom: 5px; }
         .toast-result { font-size: 1.4rem; font-weight: bold; color: #4caf50; }
+
+        #typing-indicator { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.85); border: 1px solid #4caf50; color: #fff; padding: 6px 15px; border-radius: 20px; font-size: 0.85rem; z-index: 350; opacity: 0; transition: opacity 0.3s; pointer-events: none; white-space: nowrap; }
         
         /* Header & Tabs */
         header { background-color: #1a1a1a; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #b71c1c; z-index: 10;}
@@ -48,12 +49,26 @@
         #loading-text { text-align: center; color: #ff5252; font-size: 0.9rem; margin-bottom: 10px; font-weight: bold; display: none; }
         .row-group { display: flex; justify-content: space-between; gap: 8px; margin-bottom: 10px; }
         
-        /* Macros */
+        /* Macros & Action Bar (Always visible) */
         .macros-container { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 5px; margin-bottom: 10px; }
         .macro-btn { background: #333; color: #fff; border: 1px solid #555; padding: 8px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; white-space: nowrap; font-size: 0.9rem; }
         .macro-btn:active { background: #555; }
         .macro-btn.add-macro { background: #2e7d32; border-color: #4caf50; }
         
+        .action-bar { display: flex; gap: 8px; margin-top: 10px; }
+        .action-bar button { border-radius: 8px; font-weight: bold; cursor: pointer; border: none; color: white; }
+        #btn-reset { background: #555; padding: 12px 10px; font-size: 1rem; }
+        .btn-adv-dis { background: #2a2a2a; border: 1px solid #444; padding: 8px; font-size: 0.85rem; flex: 0.8; }
+        #btn-adv { border-color: #2e7d32; color: #81c784; }
+        #btn-dis { border-color: #c62828; color: #e57373; }
+        #btn-roll { flex: 1.5; background: #4caf50; padding: 12px; font-size: 1.1rem; }
+        #btn-roll:disabled { opacity: 0.5; background: #333; }
+
+        /* Collapsible Dice Pool */
+        #btn-collapse-dice { width: 100%; background: #222; border: 1px solid #333; color: #aaa; font-size: 1rem; cursor: pointer; padding: 4px 0; border-radius: 6px; margin-bottom: 10px; transition: 0.2s; }
+        #btn-collapse-dice:hover { background: #333; }
+        #dice-pool-section { transition: max-height 0.3s ease-out, opacity 0.3s ease-out; overflow: hidden; max-height: 500px; opacity: 1; }
+
         .modifier-group { flex: 1; display: flex; align-items: center; justify-content: space-between; background: #222; padding: 6px 12px; border-radius: 8px; }
         .modifier-controls { display: flex; align-items: center; gap: 5px; }
         .modifier-controls button { background: #333; color: white; border: none; width: 30px; height: 30px; border-radius: 4px; font-size: 1.2rem; cursor: pointer; }
@@ -62,20 +77,11 @@
         .crit-checkbox-container { display: flex; align-items: center; background: #4a148c; padding: 6px 10px; border-radius: 8px; border: 1px solid #7b1fa2; color: white; font-weight: bold; }
         .crit-checkbox-container input { transform: scale(1.3); margin-right: 8px; }
         
-        .pool-builder { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 10px; }
+        .pool-builder { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 5px; }
         .dice-row { display: flex; align-items: center; justify-content: space-between; background: #222; padding: 4px 8px; border-radius: 6px; border: 1px solid #333; }
         .dice-row .lbl { font-weight: bold; color: #ff5252; width: 35px; font-size: 1.1rem; }
         .dice-row button { background: #333; color: white; border: none; width: 30px; height: 30px; border-radius: 4px; font-size: 1.2rem; cursor: pointer; }
         .dice-row .cnt { font-size: 1.2rem; font-weight: bold; width: 25px; text-align: center; }
-        
-        .action-bar { display: flex; gap: 8px; }
-        .action-bar button { border-radius: 8px; font-weight: bold; cursor: pointer; border: none; color: white; }
-        #btn-reset { background: #555; padding: 12px 10px; font-size: 1rem; }
-        .btn-adv-dis { background: #2a2a2a; border: 1px solid #444; padding: 8px; font-size: 0.85rem; flex: 0.8; }
-        #btn-adv { border-color: #2e7d32; color: #81c784; }
-        #btn-dis { border-color: #c62828; color: #e57373; }
-        #btn-roll { flex: 1.5; background: #4caf50; padding: 12px; font-size: 1.1rem; }
-        #btn-roll:disabled { opacity: 0.5; background: #333; }
         
         /* History */
         .history { flex: 1; background: #1a1a1a; border-radius: 10px; padding: 12px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; border: 1px solid #333; }
@@ -89,7 +95,28 @@
         .total-value { font-size: 1.2rem; font-weight: bold; color: #fff; background: #111; padding: 2px 8px; border-radius: 4px; border: 1px solid #444; }
         .roll-details { margin: 5px 0; color: #aaa; font-size: 0.9rem; word-wrap: break-word; }
         
-        /* Character Styles */
+        /* New 3D Dice Popup (Bottom Toast Style) */
+        #dice-box { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 100; overflow: hidden; }
+        #dice-box canvas { width: 100% !important; height: 100% !important; }
+        #dice-popup-overlay { position: fixed; bottom: -250px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 400px; display: flex; justify-content: center; align-items: center; z-index: 300; pointer-events: none; opacity: 0; transition: bottom 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.4s; }
+        #dice-popup-overlay.show { bottom: 30px; opacity: 1; }
+        .popup-dice-card { background: rgba(30, 30, 30, 0.95); border: 2px solid #b71c1c; padding: 15px 25px; border-radius: 16px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.8); width: 100%; }
+        .popup-dice-card h3 { margin: 0 0 10px 0; color: #ff5252; font-size: 1.1rem; }
+        .popup-dice-values { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin: 10px 0; }
+        .popup-dice-item { background: #111; border: 1px solid #444; border-radius: 8px; padding: 8px 12px; font-size: 1.3rem; font-weight: bold; color: #fff; }
+        .popup-dice-total { margin-top: 10px; color: #aaa; font-size: 1rem; }
+        .popup-dice-total span { color: #4caf50; font-size: 1.3rem; font-weight: bold; }
+
+        /* Save/Load List */
+        .char-list-item { background: #222; border: 1px solid #444; padding: 10px; border-radius: 6px; margin-bottom: 5px; display: flex; justify-content: space-between; align-items: center; transition: 0.2s; }
+        .char-list-item:hover { border-color: #b71c1c; background: #333; }
+        .char-info { flex: 1; cursor: pointer; }
+        .btn-delete-char { background: transparent !important; border: none !important; color: #ff5252 !important; font-size: 1.4rem !important; cursor: pointer !important; padding: 5px !important; margin: 0 !important; width: auto !important; flex-shrink: 0; }
+        
+        /* Mobile Footer Safe Area */
+        #bottom-safe-area { display: none; height: 45px; background-color: #1a1a1a; border-top: 2px solid #b71c1c; flex-shrink: 0; z-index: 10; width: 100%; }
+        
+        /* Character specific generic css kept for below */
         .panel-card { background: #1a1a1a; border-radius: 10px; padding: 15px; border: 1px solid #333; margin-bottom: 10px; }
         .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px; }
         .stat-box { background: #222; padding: 15px; border-radius: 8px; text-align: center; border: 1px solid #444; }
@@ -97,26 +124,20 @@
         .stat-value { font-size: 2rem; font-weight: bold; color: #fff; background: transparent; border: none; text-align: center; width: 60px; }
         .hp-controls { display: flex; justify-content: center; align-items: center; gap: 10px; }
         .hp-controls button { background: #444; color: white; border: none; width: 30px; height: 30px; border-radius: 15px; font-size: 1.2rem; }
-        
         .rest-btns { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
         .rest-btns button { padding: 10px; background: #0277bd; color: white; border: none; border-radius: 6px; font-weight: bold; font-size: 1rem; }
-        
-        /* Death Saves */
         .ds-group { display: flex; gap: 10px; }
         .ds-group input[type="checkbox"] { transform: scale(1.6); margin: 0; accent-color: #ff5252; cursor: pointer; }
         #ds-successes input[type="checkbox"] { accent-color: #4caf50; }
-
         .spells-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
         .spell-level { background: #222; padding: 10px; border-radius: 6px; border: 1px solid #444; text-align: center; }
         .spell-level h4 { margin: 0 0 5px 0; font-size: 0.85rem; color: #aaa; }
         .spell-slots { display: flex; justify-content: center; gap: 5px; flex-wrap: wrap; }
         .slot-dot { width: 16px; height: 16px; border-radius: 50%; border: 2px solid #888; background: #222; cursor: pointer; }
         .slot-dot.active { background: #4caf50; border-color: #4caf50; }
-        
         .rollable { cursor: pointer; border-bottom: 1px dashed #777; transition: 0.2s; user-select: none; }
         .rollable:hover { color: #ff5252; border-bottom-color: #ff5252; }
         
-        /* Party & Notepad */
         #btn-roll-init { width: 100%; background: #ff8f00; color: white; padding: 12px; border: none; border-radius: 8px; font-size: 1.1rem; font-weight: bold; margin-bottom: 10px; cursor: pointer;}
         #btn-clear-init { width: 100%; background: #444; color: #aaa; padding: 8px; border: none; border-radius: 8px; margin-bottom: 10px; cursor: pointer; font-size: 1rem; }
         .party-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 15px; }
@@ -126,36 +147,20 @@
         .member-stats { font-size: 0.85rem; color: #aaa; }
         .member-init { font-size: 1.3rem; font-weight: bold; color: #ff8f00; background: #111; padding: 4px 10px; border-radius: 6px; }
         .notepad { width: 100%; height: 150px; background: #222; color: #fff; border: 1px solid #444; border-radius: 8px; padding: 10px; font-size: 1rem; resize: none; }
-        
-        /* 3D Dice Popup */
-        #dice-box { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 100; overflow: hidden; }
-        #dice-box canvas { width: 100% !important; height: 100% !important; }
-        #dice-popup-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 300; pointer-events: none; opacity: 0; transition: opacity 0.3s; }
-        .popup-dice-card { background: #1e1e1e; border: 2px solid #b71c1c; padding: 20px 30px; border-radius: 16px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.8); transform: scale(0.5); transition: transform 0.3s; }
-        .popup-dice-card h3 { margin: 0 0 10px 0; color: #ff5252; font-size: 1.2rem; }
-        .popup-dice-values { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin: 10px 0; }
-        .popup-dice-item { background: #111; border: 1px solid #444; border-radius: 8px; padding: 10px 15px; font-size: 1.5rem; font-weight: bold; color: #fff; }
-        .popup-dice-total { margin-top: 10px; color: #aaa; font-size: 1rem; }
-        .popup-dice-total span { color: #4caf50; font-size: 1.3rem; font-weight: bold; }
-
-        /* Save/Load List */
-        .char-list-item { background: #222; border: 1px solid #444; padding: 10px; border-radius: 6px; margin-bottom: 5px; display: flex; justify-content: space-between; align-items: center; transition: 0.2s; }
-        .char-list-item:hover { border-color: #b71c1c; background: #333; }
-        .char-info { flex: 1; cursor: pointer; }
-        .btn-delete-char { background: transparent; border: none; color: #ff5252; font-size: 1.3rem; cursor: pointer; padding: 0 5px; }
-        
-        /* Mobile Footer Safe Area */
-        #bottom-safe-area { display: none; height: 45px; background-color: #1a1a1a; border-top: 2px solid #b71c1c; flex-shrink: 0; z-index: 10; width: 100%; }
     </style>
 </head>
 <body>
     <div id="dice-box"></div>
     
+    <!-- Typing indicator -->
+    <div id="typing-indicator"></div>
+
     <div id="roll-toast">
         <div class="toast-title" id="toast-title">Атака</div>
         <div class="toast-result" id="toast-result">20</div>
     </div>
 
+    <!-- Reworked Dice Popup (Bottom slide-up) -->
     <div id="dice-popup-overlay">
         <div class="popup-dice-card" id="popup-card">
             <h3 id="popup-title">Гість кидає кубики</h3>
@@ -201,7 +206,6 @@
                 </label>
             </div>
             
-            <!-- NEW: Scaling sliders -->
             <div style="margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid #444;">
                 <label class="settings-label" style="flex-direction: column; align-items: flex-start; gap: 5px;">
                     <div style="display: flex; justify-content: space-between; width: 100%;">
@@ -209,13 +213,6 @@
                         <span id="text-size-val">100%</span>
                     </div>
                     <input type="range" id="set-text-size" min="50" max="200" value="100" style="width: 100%;">
-                </label>
-                <label class="settings-label" style="flex-direction: column; align-items: flex-start; gap: 5px;">
-                    <div style="display: flex; justify-content: space-between; width: 100%;">
-                        <span data-i18n="ui_scale_label">Масштаб інтерфейсу</span>
-                        <span id="ui-scale-val">100%</span>
-                    </div>
-                    <input type="range" id="set-ui-scale" min="90" max="120" value="100" style="width: 100%;">
                 </label>
             </div>
 
@@ -231,6 +228,15 @@
             </div>
 
             <div style="margin: 20px 0;">
+                <label class="settings-label">
+                    <span data-i18n="set_show_typing">Показувати, хто друкує нотатки</span>
+                    <input type="checkbox" id="set-show-typing">
+                </label>
+                <label class="settings-label">
+                    <span data-i18n="set_show_popups">Спливаючі вікна чужих кидків</span>
+                    <input type="checkbox" id="set-show-popups">
+                </label>
+                <div style="border-top: 1px solid #444; margin: 10px 0;"></div>
                 <label class="settings-label">
                     <span data-i18n="set_conf_roll">Підтверджувати звичайний кидок</span>
                     <input type="checkbox" id="set-conf-roll">
@@ -292,29 +298,33 @@
                     <button class="macro-btn add-macro" id="add-macro-btn" data-i18n="btn_add_macro">+ Додати макрос</button>
                 </div>
                 
-                <div class="row-group">
-                    <div class="modifier-group">
-                        <label data-i18n="mod_label">Мод:</label>
-                        <div class="modifier-controls">
-                            <button id="mod-min">-</button>
-                            <input type="number" id="modifier" value="0" />
-                            <button id="mod-add">+</button>
+                <button id="btn-collapse-dice">⬆️</button>
+
+                <div id="dice-pool-section">
+                    <div class="row-group">
+                        <div class="modifier-group">
+                            <label data-i18n="mod_label">Мод:</label>
+                            <div class="modifier-controls">
+                                <button id="mod-min">-</button>
+                                <input type="number" id="modifier" value="0" />
+                                <button id="mod-add">+</button>
+                            </div>
                         </div>
+                        <label class="crit-checkbox-container">
+                            <input type="checkbox" id="crit-checkbox"> <span data-i18n="crit_label">⚡ Крит</span>
+                        </label>
                     </div>
-                    <label class="crit-checkbox-container">
-                        <input type="checkbox" id="crit-checkbox"> <span data-i18n="crit_label">⚡ Крит</span>
-                    </label>
-                </div>
-                
-                <div class="pool-builder">
-                    <div class="dice-row" data-sides="4"><span class="lbl">d4</span><button class="btn-min">-</button><span class="cnt">0</span><button class="btn-add">+</button></div>
-                    <div class="dice-row" data-sides="6"><span class="lbl">d6</span><button class="btn-min">-</button><span class="cnt">0</span><button class="btn-add">+</button></div>
-                    <div class="dice-row" data-sides="8"><span class="lbl">d8</span><button class="btn-min">-</button><span class="cnt">0</span><button class="btn-add">+</button></div>
-                    <div class="dice-row" data-sides="10"><span class="lbl">d10</span><button class="btn-min">-</button><span class="cnt">0</span><button class="btn-add">+</button></div>
-                    <div class="dice-row" data-sides="12"><span class="lbl">d12</span><button class="btn-min">-</button><span class="cnt">0</span><button class="btn-add">+</button></div>
-                    <div class="dice-row" data-sides="20"><span class="lbl">d20</span><button class="btn-min">-</button><span class="cnt">0</span><button class="btn-add">+</button></div>
-                    <div class="dice-row" data-sides="100" style="grid-column: span 2; justify-content: center; gap: 15px;">
-                        <span class="lbl">d100</span><button class="btn-min">-</button><span class="cnt">0</span><button class="btn-add">+</button>
+                    
+                    <div class="pool-builder">
+                        <div class="dice-row" data-sides="4"><span class="lbl">d4</span><button class="btn-min">-</button><span class="cnt">0</span><button class="btn-add">+</button></div>
+                        <div class="dice-row" data-sides="6"><span class="lbl">d6</span><button class="btn-min">-</button><span class="cnt">0</span><button class="btn-add">+</button></div>
+                        <div class="dice-row" data-sides="8"><span class="lbl">d8</span><button class="btn-min">-</button><span class="cnt">0</span><button class="btn-add">+</button></div>
+                        <div class="dice-row" data-sides="10"><span class="lbl">d10</span><button class="btn-min">-</button><span class="cnt">0</span><button class="btn-add">+</button></div>
+                        <div class="dice-row" data-sides="12"><span class="lbl">d12</span><button class="btn-min">-</button><span class="cnt">0</span><button class="btn-add">+</button></div>
+                        <div class="dice-row" data-sides="20"><span class="lbl">d20</span><button class="btn-min">-</button><span class="cnt">0</span><button class="btn-add">+</button></div>
+                        <div class="dice-row" data-sides="100" style="grid-column: span 2; justify-content: center; gap: 15px;">
+                            <span class="lbl">d100</span><button class="btn-min">-</button><span class="cnt">0</span><button class="btn-add">+</button>
+                        </div>
                     </div>
                 </div>
 
@@ -327,8 +337,7 @@
             </div>
             <div class="history" id="history"></div>
         </div>
-
-        <!-- Вкладка: Герой -->
+		<!-- Вкладка: Герой -->
         <div id="tab-char" class="tab-content">
             <div class="panel-card">
                 <h2 id="char-name-display" style="margin-top:0; color: #ff5252; cursor: pointer;">Ім'я Персонажа ✎</h2>
@@ -520,16 +529,16 @@
 
         // --- НАЛАШТУВАННЯ ТА МАСШТАБУВАННЯ ---
         let appSettings = JSON.parse(localStorage.getItem('dnd_settings')) || { 
-            confirmRoll: true, confirmAdv: true, confirmReset: true, clearTime: 10, bottomNav: false, textSize: 100, uiScale: 100 
+            confirmRoll: true, confirmAdv: true, confirmReset: true, clearTime: 10, bottomNav: false, 
+            textSize: 100, showTyping: true, showPopups: true 
         };
         
         const settingsModal = document.getElementById('settings-modal');
         const safeArea = document.getElementById('bottom-safe-area');
         
-        // Функція застосування масштабів
+        // Функція застосування масштабу тексту
         function applyScaling() {
             document.documentElement.style.fontSize = (appSettings.textSize || 100) + '%';
-            document.body.style.zoom = (appSettings.uiScale || 100) + '%';
         }
 
         // Відновлюємо UI налаштувань
@@ -537,26 +546,20 @@
         document.getElementById('set-conf-adv').checked = appSettings.confirmAdv;
         document.getElementById('set-conf-reset').checked = appSettings.confirmReset;
         document.getElementById('set-bottom-nav').checked = appSettings.bottomNav;
+        document.getElementById('set-show-typing').checked = appSettings.showTyping !== false;
+        document.getElementById('set-show-popups').checked = appSettings.showPopups !== false;
         document.getElementById('set-clear-time').value = appSettings.clearTime !== undefined ? appSettings.clearTime : 10;
         
         const textSizeSlider = document.getElementById('set-text-size');
-        const uiScaleSlider = document.getElementById('set-ui-scale');
         const textSizeVal = document.getElementById('text-size-val');
-        const uiScaleVal = document.getElementById('ui-scale-val');
         
         textSizeSlider.value = appSettings.textSize || 100;
-        uiScaleSlider.value = appSettings.uiScale || 100;
         textSizeVal.innerText = (appSettings.textSize || 100) + '%';
-        uiScaleVal.innerText = (appSettings.uiScale || 100) + '%';
 
-        // Слухачі для зміни масштабу в реальному часі (прев'ю)
+        // Слухачі для зміни масштабу в реальному часі
         textSizeSlider.addEventListener('input', (e) => {
             textSizeVal.innerText = e.target.value + '%';
             document.documentElement.style.fontSize = e.target.value + '%';
-        });
-        uiScaleSlider.addEventListener('input', (e) => {
-            uiScaleVal.innerText = e.target.value + '%';
-            document.body.style.zoom = e.target.value + '%';
         });
         
         safeArea.style.display = appSettings.bottomNav ? 'block' : 'none';
@@ -569,9 +572,10 @@
                 confirmAdv: document.getElementById('set-conf-adv').checked,
                 confirmReset: document.getElementById('set-conf-reset').checked,
                 bottomNav: document.getElementById('set-bottom-nav').checked,
+                showTyping: document.getElementById('set-show-typing').checked,
+                showPopups: document.getElementById('set-show-popups').checked,
                 clearTime: parseInt(document.getElementById('set-clear-time').value) || 0,
-                textSize: parseInt(textSizeSlider.value),
-                uiScale: parseInt(uiScaleSlider.value)
+                textSize: parseInt(textSizeSlider.value)
             };
             localStorage.setItem('dnd_settings', JSON.stringify(appSettings));
             safeArea.style.display = appSettings.bottomNav ? 'block' : 'none';
@@ -590,6 +594,24 @@
         function withConfirmation(settingKey, messageKey, action) {
             if (appSettings[settingKey]) { if (confirm(t(messageKey))) action(); } else { action(); }
         }
+
+        // --- ЗБОРКУВАННЯ / РОЗГОРТАННЯ ПУЛУ КУБИКІВ ---
+        const btnCollapseDice = document.getElementById('btn-collapse-dice');
+        const dicePoolSection = document.getElementById('dice-pool-section');
+        let isDiceCollapsed = false;
+
+        btnCollapseDice.addEventListener('click', () => {
+            isDiceCollapsed = !isDiceCollapsed;
+            if (isDiceCollapsed) {
+                dicePoolSection.style.maxHeight = '0px';
+                dicePoolSection.style.opacity = '0';
+                btnCollapseDice.innerText = '⬇️';
+            } else {
+                dicePoolSection.style.maxHeight = '500px';
+                dicePoolSection.style.opacity = '1';
+                btnCollapseDice.innerText = '⬆️';
+            }
+        });
 
         // --- ЗБЕРЕЖЕННЯ / ЗАВАНТАЖЕННЯ / ВИДАЛЕННЯ ---
         document.getElementById('btn-save-server').addEventListener('click', () => {
@@ -627,11 +649,9 @@
                     </div>
                     <button class="btn-delete-char" data-name="${item.name}">🗑️</button>
                 `;
-                // Завантаження
                 div.querySelector('.char-info').addEventListener('click', () => {
                     if (confirm(`Load "${item.name}"?`)) { socket.emit('load_character', item.name); }
                 });
-                // Видалення
                 div.querySelector('.btn-delete-char').addEventListener('click', (e) => {
                     e.stopPropagation();
                     if (confirm(`${t('msg_confirm_delete')} "${item.name}"?`)) {
@@ -895,10 +915,55 @@
         });
         renderMacros();
 
-        // --- СОКЕТИ ТА ІНІЦІАТИВА ---
+        // --- СОКЕТИ ТА ІНІЦІАТИВА ТА НОТАТКИ (TYPING) ---
         const notepad = document.getElementById('shared-notepad');
-        notepad.addEventListener('input', () => socket.emit('update_notepad', notepad.value));
+        const typingIndicator = document.getElementById('typing-indicator');
+        let typingUsers = new Set();
+        let myTypingTimeout = null;
+
+        function updateTypingUI() {
+            if (!appSettings.showTyping || typingUsers.size === 0) {
+                typingIndicator.style.opacity = '0';
+                return;
+            }
+            
+            let names = Array.from(typingUsers);
+            let text = '';
+            
+            if (names.length === 1) {
+                text = `<strong>${names[0]}</strong> ${t('typing_one')}`;
+            } else if (names.length === 2) {
+                text = `<strong>${names[0]}</strong> ${t('typing_and')} <strong>${names[1]}</strong> ${t('typing_many')}`;
+            } else {
+                let last = names.pop();
+                text = `<strong>${names.join(', ')}</strong> ${t('typing_and')} <strong>${last}</strong> ${t('typing_many')}`;
+            }
+            
+            typingIndicator.innerHTML = text;
+            typingIndicator.style.opacity = '1';
+        }
+
+        notepad.addEventListener('input', () => {
+            socket.emit('update_notepad', notepad.value);
+            
+            // Відправляємо статус "друкує"
+            socket.emit('typing_notepad', true);
+            if (myTypingTimeout) clearTimeout(myTypingTimeout);
+            myTypingTimeout = setTimeout(() => {
+                socket.emit('typing_notepad', false);
+            }, 2000); // Приховуємо через 2 сек бездіяльності
+        });
+
         socket.on('notepad_updated', (text) => { if(document.activeElement !== notepad) notepad.value = text; });
+        
+        socket.on('user_typing', (data) => {
+            if (data.isTyping) {
+                typingUsers.add(data.name);
+            } else {
+                typingUsers.delete(data.name);
+            }
+            updateTypingUI();
+        });
 
         socket.on('update_players', (players) => {
             currentPlayersCount = players.length; updatePlayerCountUI(); const partyList = document.getElementById('party-list'); partyList.innerHTML = '';
@@ -1066,10 +1131,16 @@
             document.getElementById('history').prepend(div);
         }
 
-        const popupOverlay = document.getElementById('dice-popup-overlay'); const popupCard = document.getElementById('popup-card');
-        const popupTitle = document.getElementById('popup-title'); const popupValues = document.getElementById('popup-values'); const popupTotal = document.getElementById('popup-total');
+        const popupOverlay = document.getElementById('dice-popup-overlay'); 
+        const popupCard = document.getElementById('popup-card');
+        const popupTitle = document.getElementById('popup-title'); 
+        const popupValues = document.getElementById('popup-values'); 
+        const popupTotal = document.getElementById('popup-total');
+        let popupTimer = null;
 
         function showPopupDice(name, results, modifier, rollType, label, labelKey) {
+            if (!appSettings.showPopups) return; // Перевірка налаштування
+
             let labelText = '';
             if (labelKey) labelText = rollType === 'heal' ? `${t(labelKey)} (${label})` : t(labelKey);
             else if (label) labelText = label; else if (rollType === 'initiative') labelText = t('roll_init'); else if (rollType === 'heal') labelText = t('roll_heal');
@@ -1101,9 +1172,12 @@
             let modText = modifier ? ` (${modifier > 0 ? '+' + modifier : modifier})` : '';
             popupTotal.innerText = `${calculateTotal(results, modifier, rollType)}${modText}`;
 
-            popupOverlay.style.display = 'flex';
-            setTimeout(() => { popupOverlay.style.opacity = '1'; popupCard.style.transform = 'scale(1)'; }, 10);
-            setTimeout(() => { popupOverlay.style.opacity = '0'; popupCard.style.transform = 'scale(0.5)'; setTimeout(() => popupOverlay.style.display = 'none', 300); }, 3500);
+            // Анімація виїзду знизу
+            popupOverlay.classList.add('show');
+            if (popupTimer) clearTimeout(popupTimer);
+            popupTimer = setTimeout(() => {
+                popupOverlay.classList.remove('show');
+            }, 3500);
         }
         
         // ЗАПУСК (Init)

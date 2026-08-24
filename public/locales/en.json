@@ -22,7 +22,7 @@
     "hit_dice": "Hit Dice:",
     "btn_short_rest": "Recover",
     "btn_long_rest": "Long Rest (Full)",
-    "conditions_title": "Conditions (Hold Ctrl/Cmd for multiple)",
+    "conditions_title": "Conditions",
     
     "death_saves_title": "Death Saves",
     "ds_successes": "Successes",
@@ -124,5 +124,10 @@
     "short_rest_log": "Short Rest",
 	"text_size_label": "Text size",
 	"ui_scale_label": "UI scale",
-	"msg_confirm_delete": "Are you sure you want to delete the character?"
+	"msg_confirm_delete": "Are you sure you want to delete the character?",
+	"set_show_typing": "Show who is typing notes",
+	"set_show_popups": "Pop-ups for other players' rolls",
+	"typing_one": "is typing...",
+	"typing_many": "are typing...",
+	"typing_and": "and"
 }
