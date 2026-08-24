@@ -1,6 +1,6 @@
 # 🎲 D&D Dice Roller
 
-A real-time multiplayer companion app for tabletop RPGs (D&D 5e/5.5e), optimized for smartphones (and PC). It combines 3D dice, a live initiative tracker, comprehensive character sheets, and a shared note board. All data is synchronized between players via WebSocket.
+A real-time multiplayer companion app for tabletop RPGs (D&D 5e/5.5e), optimized for smartphones (and PC). It combines 3D dice, a live initiative tracker, comprehensive character sheets, and a shared note board. All data is synchronized between players via WebSocket. And everything works locally on your device. Even if there is no Wi-Fi nearby, you can create your own hotspot, and the players can connect to your Wi-Fi and access the web page through their browsers.
 
 ## ✨ Main Features
 
@@ -82,7 +82,7 @@ For future server startups:
 ```
 
 # 🎲 D&D Dice Roller
-Реалтаймовий мультиплеєрний компаньйон для настільних RPG (D&D 5e/5.5e) для смартфонів (і пк). Поєднує 3D-кістки, живий трекер ініціативи, повноцінні листи персонажів та спільну дошку нотаток. Всі дані синхронізуються між гравцями через WebSocket.
+Реалтаймовий мультиплеєрний компаньйон для настільних RPG (D&D 5e/5.5e) для смартфонів (і пк). Поєднує 3D-кістки, живий трекер ініціативи, повноцінні листи персонажів та спільну дошку нотаток. Всі дані синхронізуються між гравцями через WebSocket. І працює все локально на вашому геджеті. Навіть якщо біля вас немає WIFI ви можете самі створити точку доступу і до вашої wifi підключаться гравці і зможуть в браузері зайти на веб-сторінку.
 
 ## ✨ Основні функції
 
