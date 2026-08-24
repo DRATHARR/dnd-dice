@@ -147,5 +147,5 @@ io.on('connection', (socket) => {
 });
 
 server.listen(PORT, '0.0.0.0', () => {
-    console.log(`Сервер запущено! Підключайтесь за адресою: http://0.0.0.0:${PORT}`);
+    console.log(`The server is running! Connect at: http://0.0.0.0:${PORT}. Give the players the IP address shown in the Wi-Fi settings of your device.`);
 });
