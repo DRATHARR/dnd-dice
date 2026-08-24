@@ -71,9 +71,12 @@ A real-time multiplayer companion app for tabletop RPGs (D&D 5e/5.5e), optimized
 ```bash
 1. Download Termux
 2. Enter in console: pkg install git -y && git clone https://github.com/DRATHARR/dnd-dice.git && cd dnd-dice && bash run.sh
-3. Run: node server.js
+3. Done!
 
-For future server startups: node server.js
+For future server startups:
+1. cd dnd-dice
+2. node server.js
+3. Done!
 
 # Open http://localhost:3000 in your browser. For multiplayer, open the page on multiple devices on the same network or host the server on a VPS/Render/Railway and share your device's IP with port 3000 (Example: 192.168.1.120:3000).
 
@@ -139,9 +142,12 @@ For future server startups: node server.js
 ```bash
 1. Скачайте Termux
 2. Напишіть в консоль: pkg install git -y && git clone https://github.com/DRATHARR/dnd-dice.git && cd dnd-dice && bash run.sh
-3. Запустити node server.js
+3. Готово!
 
-Для майбутніх запусків сервера: node server.js
+Для майбутніх запусків сервера:
+1. cd dnd-dice
+2. node server.js
+3. Готово!
 
 # Відкрийте http://localhost:3000 у браузері. Для мультиплеєру відкрийте сторінку на кількох пристроях в одній мережі або підніміть сервер на VPS/Render/Railway і дайте IP вашого девайса з портом 3000 (Приклад: 192.168.1.120:3000).
 ```
