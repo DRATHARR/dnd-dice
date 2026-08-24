@@ -1074,7 +1074,7 @@
             if (data.rollType === 'heal' && data.name === playerName) { charData.hp = Math.min(charData.maxHp, charData.hp + data.total); updateCharUI(); saveAndSyncChar(); }
             addLog(data);
 
-            if (currentTab !== 'tab-dice') {
+            if (currentTab !== 'tab-dice' && data.name === playerName) {
                 let labelText = '';
                 if (data.labelKey) labelText = data.rollType === 'heal' ? `${t(data.labelKey)} (${data.label})` : t(data.labelKey);
                 else if (data.label) labelText = data.label;
