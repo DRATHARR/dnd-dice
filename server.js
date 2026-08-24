@@ -27,15 +27,15 @@ if (fs.existsSync(CHARACTERS_FILE)) {
     try {
         const fileData = fs.readFileSync(CHARACTERS_FILE, 'utf8');
         savedCharacters = JSON.parse(fileData);
-        console.log(`[Сервер] Завантажено ${Object.keys(savedCharacters).length} персонажів з файлу.`);
+        console.log(`[Server] Loaded ${Object.keys(savedCharacters).length} characters from the file.`);
     } catch (err) {
-        console.error("[Сервер] Помилка читання characters.json:", err);
+        console.error("[Server] Error reading characters.json:", err);
     }
 }
 
 function saveCharactersToFile() {
     fs.writeFile(CHARACTERS_FILE, JSON.stringify(savedCharacters, null, 4), (err) => {
-        if (err) console.error("[Сервер] Помилка запису в characters.json:", err);
+        if (err) console.error("[Server] Error writing to characters.json:", err);
     });
 }
 // -----------------------------------
